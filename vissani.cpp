@@ -110,15 +110,8 @@ int main() {
     TLine ** lExp_points;
     lExp_points = new TLine*[ 10 ];
 
-
-    for ( int i = 0; i < exp_data.size(); i++){
-        gExperimental->SetPoint(i,i+1,exp_data[i]);
-        gExperimental->SetPointError(i,0,exp_dataerror[i]);
-    } 
-
     TLine ** lSim_points;
     lSim_points = new TLine*[ 8 ];
-
 
     vector<double> exp_data = {19, 22, 28, 36, 36, 37, 38, 39};
     vector<double> exp_dataerror = {5, 5, 6, 6, 9, 7, 7, 7};
@@ -192,15 +185,10 @@ int main() {
 
         gRandom -> SetPoint(i, i+1, rngs[i]);
         gRandom -> SetPointError(i, 0, 6);
-
-        gRandom -> SetPoint( i, i, rngs[i]);
-        gRandom -> SetPointError( i, 0, std);
-
-        //gRandom -> SetPointError( i, 0, sqrt(counter_N));
         cout << i<<": "<< rngs[i] << endl;
     }
     for ( int i = 0; i < exp_data.size(); i++){
-        gExperimental->SetPoint(i,i,exp_data[i]);
+        gExperimental->SetPoint(i,i+1,exp_data[i]);
         gExperimental->SetPointError(i,0,exp_dataerror[i]);
         lExp_points [i] = new TLine (exp_data[i],0.,exp_data[i],maximum);
     } 
@@ -211,9 +199,11 @@ int main() {
     double middle_point;
     double delta_x = (xMax - xMin) / N;
     double threshold = 20.;
+    double threshold_nu_O = 26.;
     
     double integral_full = 0;
     double integral_partial = 0;
+    double integral_partial_nu_O = 0;
 
     for (int step = 0; step < N ; step++){
 
@@ -225,11 +215,17 @@ int main() {
 
             integral_partial += diff_spec_test ( middle_point, 1., temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm) * delta_x;
         }
+        if ( middle_point > threshold_nu_O){
+
+            integral_partial_nu_O += diff_spec_test ( middle_point, 1., temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm) * delta_x;
+        }
     }
     cout << "Total integral = " << integral_full << endl;
     cout << "partial integral = " << integral_partial << endl;
+    cout << "partial integral nu O interacition = " << integral_partial_nu_O << endl;
 
     cout << "Percentage above 20 MeV: " << (double) integral_partial/integral_full * 100. << endl;
+    cout << "Percentage above 26 MeV: " << (double) integral_partial_nu_O/integral_full * 100. << endl;
 
 
     ///////////////////// Chi-square analysis //////////
@@ -256,7 +252,7 @@ int main() {
 
     ///////// allowed regions ////
 
-    double N_region = 1e3;
+    double N_region = 3e2;
     double bin_t_min = 3;
     double bin_t_max = 8.5;
     double dt = (bin_t_max - bin_t_min) / N_region;
@@ -400,7 +396,7 @@ int main() {
     gExperimental->SetLineWidth(2);
     gExperimental->Draw("same p");
 
-    auto legend = new TLegend(0.6,0.14,0.88,0.4);
+    auto legend = new TLegend(0.55,0.14,0.88,0.3);
     legend->AddEntry(gRandom,"Monte Carlo","pl");
     legend->AddEntry(gExperimental,"Experimental data","pl");
     legend->Draw(); 

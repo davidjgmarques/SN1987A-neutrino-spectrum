@@ -111,7 +111,7 @@ int main() {
     vector<double> exp_dataerror = {5, 5, 6, 6, 9, 7, 7, 7};
 
     for ( int i = 0; i < exp_data.size(); i++){
-        gExperimental->SetPoint(i,i,exp_data[i]);
+        gExperimental->SetPoint(i,i+1,exp_data[i]);
         gExperimental->SetPointError(i,0,exp_dataerror[i]);
     } 
 
@@ -150,8 +150,8 @@ int main() {
 
     sort ( rngs.begin(), rngs.end());
     for (int  i=0; i<rngs.size();i++){
-        gRandom -> SetPoint( i, i, rngs[i]);
-        gRandom -> SetPointError( i, 0, 0);
+        gRandom -> SetPoint(i, i+1, rngs[i]);
+        gRandom -> SetPointError(i, 0, 6);
         //gRandom -> SetPointError( i, 0, sqrt(counter_N));
         cout << i<<": "<< rngs[i] << endl;
     }
@@ -291,6 +291,8 @@ int main() {
 	c3->cd();
     c3->SetGridx();
     c3->SetGridy();
+    gRandom->SetMarkerColor(kAzure-5);
+    gRandom->SetMarkerStyle(20);
     gRandom->SetLineColor(kAzure-5);
     gRandom->SetLineWidth(2);
     gRandom->SetTitle("");
@@ -300,14 +302,16 @@ int main() {
     gRandom->GetYaxis()->SetRangeUser(0.,60.);
     gRandom->GetXaxis()->SetTitleOffset(1.0);
     gRandom->GetXaxis()->SetTitleSize(0.045);
-    gRandom->Draw("apl");
+    gRandom->Draw("ap");
+    gExperimental->SetMarkerColor(kGray+2);
+    gExperimental->SetMarkerStyle(20);
     gExperimental->SetLineColor(kGray+2);
     gExperimental->SetLineWidth(2);
-    gExperimental->Draw("same");
+    gExperimental->Draw("same p");
 
     auto legend = new TLegend(0.6,0.14,0.88,0.4);
-    legend->AddEntry(gRandom,"Monte Carlo","l");
-    legend->AddEntry(gExperimental,"Experimental data","l");
+    legend->AddEntry(gRandom,"Monte Carlo","pl");
+    legend->AddEntry(gExperimental,"Experimental data","pl");
     legend->Draw(); 
     c3->SaveAs("Comparison_of_data.pdf");
 

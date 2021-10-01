@@ -107,16 +107,21 @@ int main() {
     TGraphErrors *gRandom = new TGraphErrors();
     TGraphErrors *gExperimental = new TGraphErrors();
 
-    vector<double> exp_data = {19, 22, 28, 36, 36, 37, 38, 39};
-    vector<double> exp_dataerror = {5, 5, 6, 6, 9, 7, 7, 7};
+    TLine ** lExp_points;
+    lExp_points = new TLine*[ 10 ];
+
 
     for ( int i = 0; i < exp_data.size(); i++){
         gExperimental->SetPoint(i,i+1,exp_data[i]);
         gExperimental->SetPointError(i,0,exp_dataerror[i]);
     } 
 
-    TLine ** lPoints;
-    lPoints = new TLine*[ 10 ];
+    TLine ** lSim_points;
+    lSim_points = new TLine*[ 8 ];
+
+
+    vector<double> exp_data = {19, 22, 28, 36, 36, 37, 38, 39};
+    vector<double> exp_dataerror = {5, 5, 6, 6, 9, 7, 7, 7};
 
     vector<double> rngs;
     double x;
@@ -132,14 +137,47 @@ int main() {
         if ( y < diff_spec_test (x , 1., temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm) ){
             
             rngs.push_back( x );
-            lPoints[ counter ] = new TLine( x , 0. , x , maximum);
+            lSim_points[ counter ] = new TLine( x , 0. , x , maximum);
             hRandDist->Fill(x);
             counter++;
         }
     }
 
-    cout << "counter: " << counter_N << endl;
+    cout << "Number of points looped before getting 10 rgns above 20 MeV: " << counter_N << endl;
 
+    // error in the rgns
+
+    double N_error = 1e6;
+    double counter_error=0;
+    vector<double> samples_rgn;
+    double mean_x = 0;
+    double error =0;
+    for (int i = 0; i < N_error; i++){
+
+        x = f_rng ( 20 , xMax);
+        y = f_rng ( 0 , maximum);
+
+        if ( y < diff_spec_test (x , 1., temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm) ){
+            
+            samples_rgn.push_back(x);
+            mean_x += x;
+            counter_error++;
+        }               
+    }
+
+    mean_x /= counter_error;
+
+    for (int i = 0; i < samples_rgn.size(); i++){
+
+        error += pow(samples_rgn[i]-mean_x,2);           
+    }
+
+    double std = sqrt(error/counter_error);
+
+    cout << "Stand. dev. of the simulated points: " << std << endl;
+
+
+    // plot of the full random distribution of points
     for ( int k = 0; k < 1e6; k++){    
     
         x = f_rng ( 0 , xMax);
@@ -148,13 +186,24 @@ int main() {
         if ( y < diff_spec_test (x , 1., temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm) ) hRandDist->Fill(x);
     }
 
+    // plot rgns and exp data in the same plot
     sort ( rngs.begin(), rngs.end());
     for (int  i=0; i<rngs.size();i++){
+
         gRandom -> SetPoint(i, i+1, rngs[i]);
         gRandom -> SetPointError(i, 0, 6);
+
+        gRandom -> SetPoint( i, i, rngs[i]);
+        gRandom -> SetPointError( i, 0, std);
+
         //gRandom -> SetPointError( i, 0, sqrt(counter_N));
         cout << i<<": "<< rngs[i] << endl;
     }
+    for ( int i = 0; i < exp_data.size(); i++){
+        gExperimental->SetPoint(i,i,exp_data[i]);
+        gExperimental->SetPointError(i,0,exp_dataerror[i]);
+        lExp_points [i] = new TLine (exp_data[i],0.,exp_data[i],maximum);
+    } 
 
 
     /////////////////// Integration ////////////////////////////
@@ -220,6 +269,10 @@ int main() {
 
     double diff_chi_square;
 
+    double closest_sweep_to_Emin, closest_sweep_to_Tmin;
+    bool closest_E = true, closest_T=true;
+    vector<double> E_for_Tmin, T_for_Emin;
+
     TGraph ** gAllowedRegions;
     gAllowedRegions = new TGraph*[3];
 
@@ -241,14 +294,33 @@ int main() {
                 diff_chi_square= chi_square_calc ( rngs, sweep_temp, sweep_energy, N_targets,cross_sec_0,distance_cm ) 
                     - chi_square_calc ( rngs, temp_min, sn_e_min, N_targets,cross_sec_0,distance_cm );
 
+                if ( sweep_energy > sn_e_min && closest_E == true ){
+                    closest_sweep_to_Emin = sweep_energy;
+                    closest_E=false;
+                }
+
+                if ( sweep_temp > temp_min && closest_T == true ){
+                    closest_sweep_to_Tmin = sweep_temp;
+                    closest_T=false;
+                }
+
                 if( diff_chi_square < (-2 * log ( 1 - CL[j] ) ) ){
 
                     gAllowedRegions[j]->SetPoint(counter_region,sweep_temp,sweep_energy*1.6e-6 / 1.e52);
                     counter_region++;
+
+                    if ( sweep_temp == closest_sweep_to_Tmin && j == 2) E_for_Tmin.push_back(sweep_energy);
+                    if ( sweep_energy == closest_sweep_to_Emin && j == 2) T_for_Emin.push_back(sweep_temp);
                 } 
             }
         }
     }
+
+    // cout << "there are " << test_counter <<" points in the interval [min_e - dE , min_e + dE]" << endl;
+    cout << "Max error for Emin, at 68: " << (double) abs((E_for_Tmin.back()*1.6e-6 - sn_e_min_erg))/ 1.e52<< endl;
+    cout << "Mix error for Emin, at 68: " << (double) abs((E_for_Tmin.front()*1.6e-6 - sn_e_min_erg))/ 1.e52<< endl;
+    cout << "Max error for Tmin, at 68: " << (double) abs(T_for_Emin.back() - temp_min) << endl;
+    cout << "Min error for Tmin, at 68: " << (double) abs(T_for_Emin.front() - temp_min) << endl;
     
 
 
@@ -280,12 +352,31 @@ int main() {
     spectrum->SetTitle("Random points generated");
     spectrum->Draw();
     for ( int k = 0; k < 10; k++){
-        lPoints[k]->SetLineColor(kGray+2);
-        //lPoints[k]->SetLineStyle(2);
-        lPoints[k]->SetLineWidth(2);
-        lPoints[k]->Draw("same");
+        lSim_points[k]->SetLineColor(kGray+2);
+        lSim_points[k]->SetLineWidth(2);
+        lSim_points[k]->Draw("same");
     }
+    auto legendPoints1 = new TLegend(0.7,0.8,0.93,0.93);
+    legendPoints1->AddEntry(lSim_points[0],"Simulated data","l");
+    legendPoints1->Draw();
     c2 -> SaveAs("distr_rgns.pdf"); 
+
+    TCanvas * c6 = new TCanvas("c6","c6",1000,700);
+	c6->cd();
+    c6->SetGridx();
+    c6->SetGridy();
+    spectrum->SetTitle("Experimental points");
+    spectrum->Draw();
+    for ( int k = 0; k < 8; k++){
+        lExp_points[k]->SetLineColor(kRed+2);
+        lExp_points[k]->SetLineStyle(2);
+        lExp_points[k]->SetLineWidth(2);
+        lExp_points[k]->Draw("same");
+    }
+    auto legendPoints2 = new TLegend(0.7,0.8,0.93,0.93);
+    legendPoints2->AddEntry(lExp_points[0],"Experimental data","l");
+    legendPoints2->Draw();
+    c6 -> SaveAs("distr_data.pdf"); 
 
     TCanvas * c3 = new TCanvas("c3","c3",1000,700);
 	c3->cd();

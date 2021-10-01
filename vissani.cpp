@@ -218,6 +218,10 @@ int main() {
 
     double diff_chi_square;
 
+    double closest_sweep_to_Emin, closest_sweep_to_Tmin;
+    bool closest_E = true, closest_T=true;
+    vector<double> E_for_Tmin, T_for_Emin;
+
     TGraph ** gAllowedRegions;
     gAllowedRegions = new TGraph*[3];
 
@@ -239,14 +243,33 @@ int main() {
                 diff_chi_square= chi_square_calc ( rngs, sweep_temp, sweep_energy, N_targets,cross_sec_0,distance_cm ) 
                     - chi_square_calc ( rngs, temp_min, sn_e_min, N_targets,cross_sec_0,distance_cm );
 
+                if ( sweep_energy > sn_e_min && closest_E == true ){
+                    closest_sweep_to_Emin = sweep_energy;
+                    closest_E=false;
+                }
+
+                if ( sweep_temp > temp_min && closest_T == true ){
+                    closest_sweep_to_Tmin = sweep_temp;
+                    closest_T=false;
+                }
+
                 if( diff_chi_square < (-2 * log ( 1 - CL[j] ) ) ){
 
                     gAllowedRegions[j]->SetPoint(counter_region,sweep_temp,sweep_energy*1.6e-6 / 1.e52);
                     counter_region++;
+
+                    if ( sweep_temp == closest_sweep_to_Tmin && j == 2) E_for_Tmin.push_back(sweep_energy);
+                    if ( sweep_energy == closest_sweep_to_Emin && j == 2) T_for_Emin.push_back(sweep_energy);
                 } 
             }
         }
     }
+
+    // cout << "there are " << test_counter <<" points in the interval [min_e - dE , min_e + dE]" << endl;
+    cout << "Emin for 68: " << E_for_Tmin.back()*1.6e-6 << endl;
+    cout << "Emax for 68: " << E_for_Tmin.front()*1.6e-6 << endl;
+    cout << "Tmin for 68: " << T_for_Emin.back() << endl;
+    cout << "Tmax for 68: " << T_for_Emin.front() << endl;
     
 
 

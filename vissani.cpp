@@ -1,3 +1,5 @@
+//c++ vissani.cpp -o vissani `root-config --glibs --cflags` 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -205,7 +207,7 @@ int main() {
 
     ///////// allowed regions ////
 
-    double N_region = 3e2;
+    double N_region = 1e3;
     double bin_t_min = 3;
     double bin_t_max = 8.5;
     double dt = (bin_t_max - bin_t_min) / N_region;
@@ -344,7 +346,7 @@ int main() {
 
     gAllowedRegions[1]->SetMarkerColor(kAzure-8);
     gAllowedRegions[1]->SetMarkerStyle(7);
-    //gAllowedRegions[1]->SetMarkerSize(1.5);
+    //gAllowedRegions[1]->SetMarkerSize(3);
     gAllowedRegions[1]->Draw("sameP");  
 
     gAllowedRegions[2]->SetMarkerColor(kAzure-7);
@@ -353,9 +355,12 @@ int main() {
     gAllowedRegions[2]->Draw("sameP");  
 
     auto legend1 = new TLegend(0.65,0.65,0.88,0.88);
-    legend1->AddEntry(gAllowedRegions[0],"3 #sigma","p");
-    legend1->AddEntry(gAllowedRegions[1],"2 #sigma","p");
-    legend1->AddEntry(gAllowedRegions[2],"1 #sigma","p");
+    gAllowedRegions[0]->SetFillColor(kAzure-9);
+    gAllowedRegions[1]->SetFillColor(kAzure-8);
+    gAllowedRegions[2]->SetFillColor(kAzure-7);
+    legend1->AddEntry(gAllowedRegions[0],"3 #sigma","f");
+    legend1->AddEntry(gAllowedRegions[1],"2 #sigma","f");
+    legend1->AddEntry(gAllowedRegions[2],"1 #sigma","f");
     legend1->Draw("");
 
     minimum_point->SetMarkerColor(kWhite);

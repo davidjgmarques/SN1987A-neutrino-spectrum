@@ -98,7 +98,7 @@ int main() {
     //cout << spectrum->Eval(10) << endl; // to obtain value from the function
 
     double maximum = spectrum->GetMaximum();
-    cout << maximum << endl;
+    //cout << maximum << endl;
     //spectrum->SetParameters(1./maximum,1);
 
     ////////////////////// Random points ////////////////////
@@ -180,12 +180,13 @@ int main() {
     }
 
     // plot rgns and exp data in the same plot
+    cout << "random generated nu energies:" << endl;
     sort ( rngs.begin(), rngs.end());
     for (int  i=0; i<rngs.size();i++){
 
         gRandom -> SetPoint(i, i+1, rngs[i]);
         gRandom -> SetPointError(i, 0, 6);
-        cout << i<<": "<< rngs[i] << endl;
+        cout << i <<": "<< rngs[i] << endl;
     }
     for ( int i = 0; i < exp_data.size(); i++){
         gExperimental->SetPoint(i,i+1,exp_data[i]);
@@ -215,23 +216,23 @@ int main() {
 
             integral_partial += diff_spec_test ( middle_point, 1., temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm) * delta_x;
         }
-        if ( middle_point > threshold_nu_O){
+        // if ( middle_point > threshold_nu_O){
 
-            integral_partial_nu_O += diff_spec_test ( middle_point, 1., temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm) * delta_x;
-        }
+        //     integral_partial_nu_O += diff_spec_test ( middle_point, 1., temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm) * delta_x;
+        // }
     }
     cout << "Total integral = " << integral_full << endl;
     cout << "partial integral = " << integral_partial << endl;
     cout << "partial integral nu O interacition = " << integral_partial_nu_O << endl;
 
     cout << "Percentage above 20 MeV: " << (double) integral_partial/integral_full * 100. << endl;
-    cout << "Percentage above 26 MeV: " << (double) integral_partial_nu_O/integral_full * 100. << endl;
+    // cout << "Percentage above 26 MeV: " << (double) integral_partial_nu_O/integral_full * 100. << endl;
 
 
     ///////////////////// Chi-square analysis //////////
 
     double chi_square = chi_square_calc(rngs, temperature, sn_energy_mev, N_targets, cross_sec_0, distance_cm);
-    cout << "chi_square: " << chi_square << endl;
+    //cout << "chi_square: " << chi_square << endl;
 
     ///////// minimum /////
 
@@ -245,8 +246,8 @@ int main() {
     double sn_e_min = ( 5 * pow(rngs.size(),2) * M_PI * pow(distance_cm,2) ) / ( N_targets * cross_sec_0 * E_sum ); // in mev
     double sn_e_min_erg = sn_e_min * 1.6e-6; // in ergs
 
-    cout << " T min: " << temp_min << endl;
-    cout << " SN e min: " << sn_e_min_erg << endl;
+    cout << "T min: " << temp_min << endl;
+    cout << "SN e min: " << sn_e_min_erg << endl;
 
     TMarker *minimum_point = new TMarker(temp_min,sn_e_min_erg / 1.e52,0);
 

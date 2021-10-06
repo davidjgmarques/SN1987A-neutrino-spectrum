@@ -1,4 +1,4 @@
-//c++ vissani.cpp -o vissani `root-config --glibs --cflags` 
+//c++ supernova_nu.cpp -o out.put `root-config --glibs --cflags` 
 
 #include <stdio.h>
 #include <stdlib.h>
